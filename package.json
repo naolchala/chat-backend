@@ -1,0 +1,20 @@
+{
+    "name": "chat-backend",
+    "version": "1.0.0",
+    "main": "index.js",
+    "author": "naolchala <naolchala6@gmail.com>",
+    "license": "MIT",
+    "type": "module",
+    "scripts": {
+        "dev": "nodemon ."
+    },
+    "dependencies": {
+        "express": "4",
+        "socket.io": "^4.5.1",
+        "uuid": "^8.3.2"
+    },
+    "devDependencies": {
+        "@faker-js/faker": "^7.2.0",
+        "nodemon": "^2.0.16"
+    }
+}
