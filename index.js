@@ -9,7 +9,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: "http://localhost:3000",
+        origin: "*",
         optionsSuccessStatus: 200,
     },
 });
@@ -31,10 +31,11 @@ const getUsers = () => {
 io.on("connection", (socket) => {
     let id = randomUUID();
     let randomName = faker.name.findName();
+    let img = faker.image.avatar();
     socket.emit("Connected", { id });
     socket.join(`room${id}`);
 
-    users[socket.id] = { id, name: randomName };
+    users[socket.id] = { id, name: randomName, img };
 
     io.emit("users", getUsers());
 
@@ -49,12 +50,32 @@ io.on("connection", (socket) => {
 
     socket.on("msg", (data) => {
         const { id, msg } = data;
-        io.emit("msgs", { id });
+        let sender;
+        for (let user in users) {
+            if (users[user]["id"] === id) {
+                sender = users[user];
+            }
+        }
+
+        io.emit("msgs", { id, sender, msg });
     });
 
     socket.on("msgTo", (data) => {
         const { id, reciver, msg } = data;
-        io.to(`room${reciver}`).emit("toMe", { id: reciver, sender: id, msg });
+
+        let sender;
+        let receiver;
+
+        for (let user in users) {
+            if (users[user]["id"] === id) {
+                sender = users[user];
+            }
+
+            if (users[user]["id"] == reciver) {
+                receiver = users[user];
+            }
+        }
+        io.to(`room${reciver}`).emit("toMe", { sender, receiver, msg });
     });
 });
 
