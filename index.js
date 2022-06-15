@@ -76,10 +76,11 @@ io.on("connection", (socket) => {
             }
         }
         io.to(`room${reciver}`).emit("toMe", { sender, receiver, msg });
+        socket.emit("toMe", { sender: receiver, receiver: sender, msg });
     });
 });
 
-const port = 4000;
+const port = 5000;
 server.listen(port, () => {
     console.log("Listening on port " + port);
 });
