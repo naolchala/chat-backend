@@ -1,0 +1,48 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String    @id @default(auto()) @map("_id") @db.ObjectId
+  name     String
+  email    String    @unique
+  password String
+  photoUrl String?
+  bio      String?
+  lastSeen DateTime  @default(now())
+  isOnline Boolean   @default(false)
+  Received Message[] @relation("Receiver")
+  Sent     Message[] @relation("Sender")
+}
+
+model Message {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  from_id   String   @db.ObjectId
+  from      User     @relation("Sender", fields: [from_id], references: [id])
+  to_id     String   @db.ObjectId
+  to        User     @relation("Receiver", fields: [to_id], references: [id])
+  content   Json
+  createdAt DateTime
+  seen      Boolean
+  edited    Boolean
+}
+
+model Contact {
+  id           String @id @default(auto()) @map("_id") @db.ObjectId
+  contacter_id String @db.ObjectId
+  contacted_id String @db.ObjectId
+}
+
+model Block {
+  id         String @id @default(auto()) @map("_id") @db.ObjectId
+  blocker_id String @db.ObjectId
+  blocked_id String @db.ObjectId
+}

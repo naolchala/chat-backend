@@ -1,10 +1,21 @@
+import * as express from "express";
+import * as http from "http";
+import * as socketioJwt from "socketio-jwt";
+import * as bodyParser from "body-parser";
+import * as cors from "cors";
 import { randomUUID } from "crypto";
-import express from "express";
-import http from "http";
-import { Server } from "socket.io";
+import { Server, Socket } from "socket.io";
 import { faker } from "@faker-js/faker";
+import { AuthRoute } from "./Routes/login";
+import { IUser } from "./config/IUser";
 
 const app = express();
+app.use(
+    cors({
+        origin: "*",
+    })
+);
+app.use(bodyParser.json());
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -14,6 +25,17 @@ const io = new Server(server, {
     },
 });
 
+const jwtSecret = process.env.JWTSECRET || randomUUID();
+
+io.use(
+    socketioJwt.authorize({
+        secret: jwtSecret,
+        handshake: true,
+        auth_header_required: true,
+    })
+);
+
+app.use("/auth", AuthRoute);
 app.get("/", (req, res) => {
     res.send("Hello World");
 });
@@ -28,7 +50,12 @@ const getUsers = () => {
     return u;
 };
 
-io.on("connection", (socket) => {
+interface SocketWithToken extends Socket {
+    decoded_token: IUser;
+}
+
+io.on("connection", (socket: SocketWithToken) => {
+    console.log(socket.decoded_token);
     let id = randomUUID();
     let randomName = faker.name.findName();
     let img = faker.image.avatar();
