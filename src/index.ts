@@ -5,9 +5,10 @@ import * as bodyParser from "body-parser";
 import * as cors from "cors";
 import { randomUUID } from "crypto";
 import { Server, Socket } from "socket.io";
-import { faker } from "@faker-js/faker";
 import { AuthRoute } from "./Routes/login";
-import { IUser } from "./config/IUser";
+import { IUser, SocketWithToken } from "./config/types";
+import { getContactsID, setOnline } from "./Controllers/user.controller";
+import { UserRoute } from "./Routes/user.route";
 
 const app = express();
 app.use(
@@ -25,7 +26,7 @@ const io = new Server(server, {
     },
 });
 
-const jwtSecret = process.env.JWTSECRET || randomUUID();
+export const jwtSecret = process.env.JWTSECRET;
 
 io.use(
     socketioJwt.authorize({
@@ -36,74 +37,57 @@ io.use(
 );
 
 app.use("/auth", AuthRoute);
+app.use("/user", UserRoute);
 app.get("/", (req, res) => {
     res.send("Hello World");
 });
 
-let users = {};
+const SocketIdUserMap = new Map<string, string[]>();
 
-const getUsers = () => {
-    const u = [];
-    for (let user in users) {
-        u.push(users[user]);
+io.on("connection", async (socket: SocketWithToken) => {
+    const user = socket.decoded_token;
+
+    await setOnline(user.id, true);
+    if (SocketIdUserMap.has(user.id)) {
+        let ids = SocketIdUserMap.get(user.id);
+        SocketIdUserMap.set(user.id, [...ids, socket.id]);
+    } else {
+        SocketIdUserMap.set(user.id, [socket.id]);
     }
-    return u;
-};
 
-interface SocketWithToken extends Socket {
-    decoded_token: IUser;
-}
-
-io.on("connection", (socket: SocketWithToken) => {
-    console.log(socket.decoded_token);
-    let id = randomUUID();
-    let randomName = faker.name.findName();
-    let img = faker.image.avatar();
-    socket.emit("Connected", { id });
-    socket.join(`room${id}`);
-
-    users[socket.id] = { id, name: randomName, img };
-
-    io.emit("users", getUsers());
-
-    socket.on("disconnecting", () => {
-        delete users[socket.id];
-        io.emit("users", getUsers());
-    });
-
-    socket.on("disconnect", () => {
-        console.log("User Disconnected");
-    });
-
-    socket.on("msg", (data) => {
-        const { id, msg } = data;
-        let sender;
-        for (let user in users) {
-            if (users[user]["id"] === id) {
-                sender = users[user];
-            }
+    const contactsID = await getContactsID(user.id);
+    contactsID.map((id) => {
+        if (SocketIdUserMap.has(user.id)) {
+            SocketIdUserMap.get(user.id).map((room) => {
+                io.to(room).emit("friend_online", user.id);
+            });
         }
-
-        io.emit("msgs", { id, sender, msg });
     });
 
-    socket.on("msgTo", (data) => {
-        const { id, reciver, msg } = data;
+    io.emit("friend_online", user.id);
 
-        let sender;
-        let receiver;
+    socket.on("disconnecting", async () => {
+        SocketIdUserMap.forEach(async (value: string[], key: string) => {
+            if (value.indexOf(socket.id) != -1) {
+                value = value.filter((id) => id != socket.id);
 
-        for (let user in users) {
-            if (users[user]["id"] === id) {
-                sender = users[user];
+                if (value.length == 0) {
+                    const contactsID = await getContactsID(key);
+                    contactsID.map((id) => {
+                        if (SocketIdUserMap.has(key)) {
+                            SocketIdUserMap.get(key).map((room) => {
+                                io.to(room).emit("friend_offline", user.id);
+                            });
+                        }
+                    });
+                    SocketIdUserMap.delete(key);
+                } else {
+                    SocketIdUserMap.set(key, value);
+                }
+
+                setOnline(key, false);
             }
-
-            if (users[user]["id"] == reciver) {
-                receiver = users[user];
-            }
-        }
-        io.to(`room${reciver}`).emit("toMe", { sender, receiver, msg });
-        socket.emit("toMe", { sender: receiver, receiver: sender, msg });
+        });
     });
 });
 

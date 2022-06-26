@@ -21,6 +21,9 @@ model User {
   isOnline Boolean   @default(false)
   Received Message[] @relation("Receiver")
   Sent     Message[] @relation("Sender")
+
+  Contacted Contact[] @relation("Contacted")
+  Blocked   Block[]   @relation("Blocked")
 }
 
 model Message {
@@ -37,12 +40,14 @@ model Message {
 
 model Contact {
   id           String @id @default(auto()) @map("_id") @db.ObjectId
-  contacter_id String @db.ObjectId
-  contacted_id String @db.ObjectId
+  contacter_id String @unique @db.ObjectId
+  contacted_id String @unique @db.ObjectId
+  Contacted    User   @relation("Contacted", fields: [contacter_id], references: [id])
 }
 
 model Block {
   id         String @id @default(auto()) @map("_id") @db.ObjectId
   blocker_id String @db.ObjectId
   blocked_id String @db.ObjectId
+  Blocked    User   @relation("Blocked", fields: [blocked_id], references: [id])
 }
