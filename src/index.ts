@@ -7,8 +7,13 @@ import { randomUUID } from "crypto";
 import { Server, Socket } from "socket.io";
 import { AuthRoute } from "./Routes/login";
 import { IUser, SocketWithToken } from "./config/types";
-import { getContactsID, setOnline } from "./Controllers/user.controller";
+import {
+    getContactsID,
+    sendMessage,
+    setOnline,
+} from "./Controllers/user.controller";
 import { UserRoute } from "./Routes/user.route";
+import { send } from "process";
 
 const app = express();
 app.use(
@@ -64,8 +69,6 @@ io.on("connection", async (socket: SocketWithToken) => {
         }
     });
 
-    io.emit("friend_online", user.id);
-
     socket.on("disconnecting", async () => {
         SocketIdUserMap.forEach(async (value: string[], key: string) => {
             if (value.indexOf(socket.id) != -1) {
@@ -80,13 +83,28 @@ io.on("connection", async (socket: SocketWithToken) => {
                             });
                         }
                     });
+                    setOnline(key, false);
                     SocketIdUserMap.delete(key);
                 } else {
                     SocketIdUserMap.set(key, value);
                 }
-
-                setOnline(key, false);
             }
+        });
+    });
+
+    socket.on("send_message", async (req) => {
+        const user = socket.decoded_token;
+        const { receiverID, message } = req;
+        const rooms = SocketIdUserMap.get(receiverID);
+
+        await sendMessage(user.id, receiverID, message);
+
+        rooms.map((room) => {
+            io.to(room).emit("incoming_message", {
+                sender: user.id,
+                receiver: receiverID,
+                message,
+            });
         });
     });
 });

@@ -39,10 +39,11 @@ model Message {
 }
 
 model Contact {
-  id           String @id @default(auto()) @map("_id") @db.ObjectId
-  contacter_id String @unique @db.ObjectId
-  contacted_id String @unique @db.ObjectId
-  Contacted    User   @relation("Contacted", fields: [contacter_id], references: [id])
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  contacter_id String   @unique @db.ObjectId
+  contacted_id String   @unique @db.ObjectId
+  Contacted    User     @relation("Contacted", fields: [contacter_id], references: [id])
+  lastContact  DateTime @default(now())
 }
 
 model Block {
