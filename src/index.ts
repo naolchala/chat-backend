@@ -53,43 +53,49 @@ io.on("connection", async (socket: SocketWithToken) => {
     const user = socket.decoded_token;
 
     await setOnline(user.id, true);
-    if (SocketIdUserMap.has(user.id)) {
-        let ids = SocketIdUserMap.get(user.id);
-        SocketIdUserMap.set(user.id, [...ids, socket.id]);
-    } else {
-        SocketIdUserMap.set(user.id, [socket.id]);
-    }
+    // if (SocketIdUserMap.has(user.id)) {
+    //     let ids = SocketIdUserMap.get(user.id);
+    //     SocketIdUserMap.set(user.id, [...ids, socket.id]);
+    // } else {
+    //     SocketIdUserMap.set(user.id, [socket.id]);
+    // }
 
+    // console.log(user.id);
+    // console.log({ contactsID });
+    // console.log({ SocketIdUserMap });
+    // contactsID.map((id) => {
+    //     if (SocketIdUserMap.has(user.id)) {
+    //         SocketIdUserMap.get(user.id).map((room) => {
+    //             console.log(`notifying user: ${id} in room ${room}`);
+    //             socket.to(room).emit("friend_online", user.id);
+    //         });
+    //     }
+    // });
+
+    socket.join(user.id);
     const contactsID = await getContactsID(user.id);
-    contactsID.map((id) => {
-        if (SocketIdUserMap.has(user.id)) {
-            SocketIdUserMap.get(user.id).map((room) => {
-                io.to(room).emit("friend_online", user.id);
-            });
-        }
-    });
+    contactsID.map((id) => socket.to(id).emit("friend_online", user.id));
 
     socket.on("disconnecting", async () => {
-        SocketIdUserMap.forEach(async (value: string[], key: string) => {
-            if (value.indexOf(socket.id) != -1) {
-                value = value.filter((id) => id != socket.id);
-
-                if (value.length == 0) {
-                    const contactsID = await getContactsID(key);
-                    contactsID.map((id) => {
-                        if (SocketIdUserMap.has(key)) {
-                            SocketIdUserMap.get(key).map((room) => {
-                                io.to(room).emit("friend_offline", user.id);
-                            });
-                        }
-                    });
-                    setOnline(key, false);
-                    SocketIdUserMap.delete(key);
-                } else {
-                    SocketIdUserMap.set(key, value);
-                }
-            }
-        });
+        // SocketIdUserMap.forEach(async (value: string[], key: string) => {
+        //     if (value.indexOf(socket.id) != -1) {
+        //         value = value.filter((id) => id != socket.id);
+        //         if (value.length == 0) {
+        //             const contactsID = await getContactsID(key);
+        //             contactsID.map((id) => {
+        //                 if (SocketIdUserMap.has(key)) {
+        //                     SocketIdUserMap.get(key).map((room) => {
+        //                         io.to(room).emit("friend_offline", user.id);
+        //                     });
+        //                 }
+        //             });
+        //             setOnline(key, false);
+        //             SocketIdUserMap.delete(key);
+        //         } else {
+        //             SocketIdUserMap.set(key, value);
+        //         }
+        //     }
+        // });
     });
 
     socket.on("send_message", async (req) => {

@@ -13,19 +13,34 @@ const setOnline = async (id: string, status: boolean) => {
 };
 
 const getContactsID = async (id: string) => {
-    const contacts = await prisma.user.findUnique({
-        where: { id },
-        select: {
-            Contacted: {
-                orderBy: {
-                    lastContact: "desc",
+    // const contacts = await prisma.user.findUnique({
+    //     where: { id },
+    //     select: {
+    //         Contacted: {
+    //             orderBy: {
+    //                 lastContact: "desc",
+    //             },
+    //         },
+    //     },
+    // });
+
+    const contacts = await prisma.contact.findMany({
+        where: {
+            OR: [
+                {
+                    contacted_id: id,
                 },
-            },
+                {
+                    contacter_id: id,
+                },
+            ],
         },
     });
 
-    const contactsID = contacts.Contacted.map((user) => user.contacted_id);
-    return contactsID;
+    const contactsID = contacts.map((user) =>
+        user.contacted_id == id ? user.contacter_id : user.contacted_id
+    );
+    return contactsID.filter((ids) => ids != id);
 };
 
 const getContacts = async (id: string) => {
