@@ -15,7 +15,12 @@ import { UserRoute } from "./Routes/user.route";
 import { socketJWTMiddleware } from "./Middleware/jwt.middleware";
 
 const app = express();
-app.use(cors());
+app.use(
+	cors({
+		allowedHeaders: "*",
+		origin: "*",
+	})
+);
 app.use(bodyParser.json());
 
 const server = https.createServer(app);
