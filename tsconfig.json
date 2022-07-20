@@ -1,11 +1,11 @@
 {
-    "compilerOptions": {
-        "module": "commonjs",
-        "outDir": "dist",
-        "sourceMap": true,
-        "strict": false,
-        "target": "es2017"
-    },
-    "compileOnSave": true,
-    "include": ["src"]
+	"compilerOptions": {
+		"module": "commonjs",
+		"outDir": "dist/",
+		"sourceMap": true,
+		"strict": false,
+		"target": "es2017"
+	},
+	"compileOnSave": true,
+	"include": ["src/*"]
 }

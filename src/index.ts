@@ -3,9 +3,9 @@ import * as http from "http";
 import * as socketioJwt from "socketio-jwt";
 import * as bodyParser from "body-parser";
 import * as cors from "cors";
-import { Server, Socket } from "socket.io";
+import { Server } from "socket.io";
 import { AuthRoute } from "./Routes/login";
-import { IUser, SocketWithToken } from "./config/types";
+import { SocketWithToken } from "./config/types";
 import {
 	contactUsers,
 	getContactsID,
@@ -13,7 +13,6 @@ import {
 	setOnline,
 } from "./Controllers/user.controller";
 import { UserRoute } from "./Routes/user.route";
-import { send } from "process";
 
 const app = express();
 app.use(
@@ -76,13 +75,6 @@ io.on("connection", async (socket: SocketWithToken) => {
 					contactsID.map((id) =>
 						socket.to(id).emit("friend_offline", user.id)
 					);
-					//             contactsID.map((id) => {
-					//                 if (SocketIdUserMap.has(key)) {
-					//                     SocketIdUserMap.get(key).map((room) => {
-					//                         io.to(room).emit("friend_offline", user.id);
-					//                     });
-					//                 }
-					//             });
 					setOnline(key, false);
 					SocketIdUserMap.delete(key);
 				} else {
