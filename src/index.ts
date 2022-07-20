@@ -1,7 +1,7 @@
 import * as express from "express";
 import * as https from "https";
 import * as bodyParser from "body-parser";
-import * as cors from "cors";
+import helmet from "helmet";
 import { Server } from "socket.io";
 import { AuthRoute } from "./Routes/login";
 import { SocketWithToken } from "./config/types";
@@ -15,12 +15,7 @@ import { UserRoute } from "./Routes/user.route";
 import { socketJWTMiddleware } from "./Middleware/jwt.middleware";
 
 const app = express();
-app.use(
-	cors({
-		allowedHeaders: "*",
-		origin: "*",
-	})
-);
+app.use(helmet());
 app.use(bodyParser.json());
 
 const server = https.createServer(app);
