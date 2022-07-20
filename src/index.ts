@@ -15,11 +15,7 @@ import { UserRoute } from "./Routes/user.route";
 import { socketJWTMiddleware } from "./Middleware/jwt.middleware";
 
 const app = express();
-app.use(
-	cors({
-		origin: "*",
-	})
-);
+app.use(cors());
 app.use(bodyParser.json());
 
 const server = https.createServer(app);
@@ -31,6 +27,7 @@ const io = new Server(server, {
 });
 
 export const jwtSecret = process.env.JWTSECRET;
+
 io.use(socketJWTMiddleware);
 
 app.use("/auth", AuthRoute);
