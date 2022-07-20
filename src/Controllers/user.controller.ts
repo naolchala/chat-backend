@@ -19,17 +19,6 @@ const setOnline = (id: string, status: boolean) => {
 };
 
 const getContactsID = async (id: string) => {
-	// const contacts = await prisma.user.findUnique({
-	//     where: { id },
-	//     select: {
-	//         Contacted: {
-	//             orderBy: {
-	//                 lastContact: "desc",
-	//             },
-	//         },
-	//     },
-	// });
-
 	const contacts = await prisma.contact.findMany({
 		where: {
 			OR: [

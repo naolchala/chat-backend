@@ -1,6 +1,5 @@
 import * as express from "express";
 import * as http from "http";
-import * as socketioJwt from "socketio-jwt";
 import * as bodyParser from "body-parser";
 import * as cors from "cors";
 import { Server } from "socket.io";
@@ -13,6 +12,7 @@ import {
 	setOnline,
 } from "./Controllers/user.controller";
 import { UserRoute } from "./Routes/user.route";
+import { socketJWTMiddleware } from "./Middleware/jwt.middleware";
 
 const app = express();
 app.use(
@@ -30,15 +30,17 @@ const io = new Server(server, {
 	},
 });
 
-export const jwtSecret = process.env.JWTSECRET || "123456";
+export const jwtSecret = process.env.JWTSECRET;
 
-io.use(
-	socketioJwt.authorize({
-		secret: jwtSecret,
-		handshake: true,
-		auth_header_required: true,
-	})
-);
+// io.use(
+// 	// socketioJwt.authorize({
+// 	// 	secret: jwtSecret,
+// 	// 	handshake: true,
+// 	// 	auth_header_required: true,
+// 	// })
+// );
+
+io.use(socketJWTMiddleware);
 
 app.use("/auth", AuthRoute);
 app.use("/user", UserRoute);
