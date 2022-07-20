@@ -108,7 +108,7 @@ io.on("connection", async (socket: SocketWithToken) => {
 	});
 });
 
-const port = 5000;
+const port = process.env.PORT || 80;
 server.listen(port, () => {
 	console.log("Listening on port " + port);
 });
