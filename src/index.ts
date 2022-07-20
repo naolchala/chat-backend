@@ -1,5 +1,5 @@
 import * as express from "express";
-import * as http from "http";
+import * as https from "https";
 import * as bodyParser from "body-parser";
 import * as cors from "cors";
 import { Server } from "socket.io";
@@ -22,7 +22,7 @@ app.use(
 );
 app.use(bodyParser.json());
 
-const server = http.createServer(app);
+const server = https.createServer(app);
 const io = new Server(server, {
 	cors: {
 		origin: "*",
@@ -31,15 +31,6 @@ const io = new Server(server, {
 });
 
 export const jwtSecret = process.env.JWTSECRET;
-
-// io.use(
-// 	// socketioJwt.authorize({
-// 	// 	secret: jwtSecret,
-// 	// 	handshake: true,
-// 	// 	auth_header_required: true,
-// 	// })
-// );
-
 io.use(socketJWTMiddleware);
 
 app.use("/auth", AuthRoute);
